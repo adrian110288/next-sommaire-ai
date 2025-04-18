@@ -1,10 +1,9 @@
-import { Button } from "@/components/ui/button";
-import Image from "next/image";
+import TodoReminder from "@/components/common/TodoReminder";
 
 export default function Home() {
     return (
         <div className="">
-            <Button>Shadcn Button</Button>
+            <TodoReminder />
         </div>
     );
 }

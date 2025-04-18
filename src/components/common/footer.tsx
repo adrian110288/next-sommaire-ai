@@ -1,7 +1,6 @@
 import React from 'react'
+import TodoReminder from "./TodoReminder";
 
 export const Footer = () => {
-  return (
-    <footer>Footer</footer>
-  )
+  return <TodoReminder />;
 }
