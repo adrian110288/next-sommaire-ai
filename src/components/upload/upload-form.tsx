@@ -5,7 +5,10 @@ import { UploadFormInput } from "./upload-form-input";
 import { z } from "zod";
 import { useUploadThing } from "@/utils/uploadthing";
 import { toast } from "sonner";
-import { generatePdfSummary } from "@/app/actions/upload-actions";
+import {
+    generatePdfSummary,
+    savePdfSummary,
+} from "@/app/actions/upload-actions";
 
 const schema = z.object({
     file: z
@@ -79,13 +82,27 @@ export const UploadForm = () => {
             const { data = null, message = null } = summary || {};
 
             if (data) {
+                let storeResult: any;
                 toast.success("Summary generated successfully", {
                     description: "We are saving your summary!",
                 });
                 formRef.current?.reset();
 
                 if (data.summary) {
-                  // save to database
+                    storeResult = await savePdfSummary({
+                        fileUrl: uploadedFile[0].serverData.file,
+                        summaryText: data.summary,
+                        title: data.title,
+                        fileName: file.name,
+                    });
+
+                    toast.success("Summary Generated and Saved!", {
+                        description: "Your PDF summary is ready to view.",
+                        icon: "🌟",
+                    });
+
+                    formRef.current?.reset();
+                    setIsLoading(false);
                 }
             }
         } catch (error) {

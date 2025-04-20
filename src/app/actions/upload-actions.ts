@@ -1,8 +1,11 @@
 "use server";
 
+import db from "@/lib/db";
 import { generatePdfSummaryFromGemini } from "@/lib/geminiai";
 import { fetchAndExtractPdfContent } from "@/lib/langchain";
 import { generatePdfSummaryFromOpenAI } from "@/lib/openai";
+import { formatFileNameAsTitle } from "@/utils/format-utils";
+import { auth } from "@clerk/nextjs/server";
 
 export const generatePdfSummary = async (
     uploadedFile: [
@@ -62,10 +65,13 @@ export const generatePdfSummary = async (
                 data: null,
             };
 
+        const formattedFileName = formatFileNameAsTitle(fileName);
+
         return {
             success: true,
             message: "Summary generated successfully",
             data: {
+                title: formattedFileName,
                 summary,
             },
         };
@@ -73,6 +79,66 @@ export const generatePdfSummary = async (
         return {
             success: false,
             message: "Failed to generate summary",
+            data: null,
+        };
+    }
+};
+
+interface SavePdfSummaryParams {
+    fileUrl: string;
+    summaryText: string;
+    title: string;
+    fileName: string;
+}
+
+export const savePdfSummary = async ({
+    fileUrl,
+    summaryText,
+    title,
+    fileName,
+}: SavePdfSummaryParams) => {
+    try {
+        const { userId } = await auth();
+        if (!userId) {
+            return {
+                success: false,
+                message: "User not found",
+            };
+        }
+
+        const savedSummary = await db`
+            INSERT INTO pdf_summaries (
+                user_id,
+                original_file_url,
+                summary_text,
+                title,
+                file_name
+            ) VALUES (
+                ${userId},
+                ${fileUrl},
+                ${summaryText},
+                ${title},
+                ${fileName}
+            )
+        `;
+
+        if (!savedSummary)
+            return {
+                success: false,
+                message: "Failed to save summary",
+            };
+
+        return {
+            success: true,
+            message: "Summary saved successfully",
+        };
+    } catch (error) {
+        return {
+            success: false,
+            message:
+                error instanceof Error
+                    ? error.message
+                    : "Failed to save summary",
             data: null,
         };
     }
