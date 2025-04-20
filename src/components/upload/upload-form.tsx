@@ -9,6 +9,7 @@ import {
     generatePdfSummary,
     savePdfSummary,
 } from "@/app/actions/upload-actions";
+import { useRouter } from "next/navigation";
 
 const schema = z.object({
     file: z
@@ -22,6 +23,7 @@ const schema = z.object({
 });
 
 export const UploadForm = () => {
+    const router = useRouter();
     const formRef = React.useRef<HTMLFormElement>(null);
     const [isLoading, setIsLoading] = React.useState(false);
 
@@ -102,14 +104,17 @@ export const UploadForm = () => {
                     });
 
                     formRef.current?.reset();
-                    setIsLoading(false);
+                    router.push(`/summaries/${storeResult.data.id}`);
                 }
             }
         } catch (error) {
             console.log(error);
             setIsLoading(false);
             formRef.current?.reset();
+        } finally {
+            setIsLoading(false);
         }
+
     };
     return (
         <div className="flex flex-col gap-8 w-full max-w-2xl mx-auto">

@@ -3,6 +3,7 @@
 import db from "@/lib/db";
 import { generatePdfSummaryFromGemini } from "@/lib/geminiai";
 import { fetchAndExtractPdfContent } from "@/lib/langchain";
+import { revalidatePath } from "next/cache";
 import { generatePdfSummaryFromOpenAI } from "@/lib/openai";
 import { formatFileNameAsTitle } from "@/utils/format-utils";
 import { auth } from "@clerk/nextjs/server";
@@ -97,6 +98,8 @@ export const savePdfSummary = async ({
     title,
     fileName,
 }: SavePdfSummaryParams) => {
+    let savedSummary: any;
+    
     try {
         const { userId } = await auth();
         if (!userId) {
@@ -106,7 +109,7 @@ export const savePdfSummary = async ({
             };
         }
 
-        const savedSummary = await db`
+        savedSummary = await db`
             INSERT INTO pdf_summaries (
                 user_id,
                 original_file_url,
@@ -127,19 +130,23 @@ export const savePdfSummary = async ({
                 success: false,
                 message: "Failed to save summary",
             };
-
-        return {
-            success: true,
-            message: "Summary saved successfully",
-        };
     } catch (error) {
         return {
             success: false,
             message:
                 error instanceof Error
                     ? error.message
-                    : "Failed to save summary",
-            data: null,
+                    : "Failed to save summary"
         };
     }
+
+    revalidatePath(`/summaries/${savedSummary.id}`);
+
+    return {
+        success: true,
+        message: "Summary saved successfully",
+        data: {
+            id: savedSummary.id,
+        },
+    };
 };
