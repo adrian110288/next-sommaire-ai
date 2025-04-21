@@ -1,7 +1,8 @@
+import EmptyState from "@/components/summaries/empty-summary-state";
 import SummaryCard from "@/components/summaries/summary-card";
 import SummaryUploadReachedNotice from "@/components/summaries/summary-upload-reached-notice";
 import { Button } from "@/components/ui/button";
-import { getSummaries } from "@/lib/summaries";
+import { getSummariesFromDb } from "@/lib/summaries";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
@@ -11,7 +12,7 @@ import React from "react";
 async function DashboardPage() {
     const user = await currentUser();
     if (!user?.id) return redirect("/sign-in");
-    const summaries = await getSummaries(user.id);
+    const summaries = await getSummariesFromDb(user.id);
     const uploadLimit = 5;
 
     return (
@@ -43,11 +44,18 @@ async function DashboardPage() {
                     <div className="mb-6">
                         <SummaryUploadReachedNotice uploadLimit={uploadLimit} />
                     </div>
-                    <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 sm:px-0">
-                        {summaries.map((summary) => (
-                            <SummaryCard key={summary.id} summary={summary} />
-                        ))}
-                    </div>
+                    {summaries.length > 0 ? (
+                        <div className="grid grid-cols-1 gap-4 sm:gap-6 md:grid-cols-2 lg:grid-cols-3 sm:px-0">
+                            {summaries.map((summary) => (
+                                <SummaryCard
+                                    key={summary.id}
+                                    summary={summary}
+                                />
+                            ))}
+                        </div>
+                    ) : (
+                        <EmptyState />
+                    )}
                 </div>
             </div>
         </main>

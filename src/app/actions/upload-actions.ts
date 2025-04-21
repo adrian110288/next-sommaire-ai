@@ -98,8 +98,8 @@ export const savePdfSummary = async ({
     title,
     fileName,
 }: SavePdfSummaryParams) => {
-    let savedSummary: any;
-    
+    let savedSummary: any[];
+
     try {
         const { userId } = await auth();
         if (!userId) {
@@ -123,12 +123,14 @@ export const savePdfSummary = async ({
                 ${title},
                 ${fileName}
             )
+            RETURNING id, summary_text
         `;
 
         if (!savedSummary)
             return {
                 success: false,
                 message: "Failed to save summary",
+                data: {},
             };
     } catch (error) {
         return {
@@ -136,17 +138,17 @@ export const savePdfSummary = async ({
             message:
                 error instanceof Error
                     ? error.message
-                    : "Failed to save summary"
+                    : "Failed to save summary",
         };
     }
 
-    revalidatePath(`/summaries/${savedSummary.id}`);
+    revalidatePath(`/summaries/${savedSummary[0].id}`);
 
     return {
         success: true,
         message: "Summary saved successfully",
         data: {
-            id: savedSummary.id,
+            id: savedSummary[0].id,
         },
     };
 };
