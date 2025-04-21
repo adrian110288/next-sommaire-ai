@@ -1,21 +1,19 @@
 import SummaryCard from "@/components/summaries/summary-card";
 import SummaryUploadReachedNotice from "@/components/summaries/summary-upload-reached-notice";
 import { Button } from "@/components/ui/button";
+import { getSummaries } from "@/lib/summaries";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { ArrowRight, Plus } from "lucide-react";
 import Link from "next/link";
+import { redirect } from "next/navigation";
 import React from "react";
 
-function DashboardPage() {
+async function DashboardPage() {
+    const user = await currentUser();
+    if (!user?.id) return redirect("/sign-in");
+    const summaries = await getSummaries(user.id);
     const uploadLimit = 5;
-    const summaries = [
-        {
-            id: 1,
-            title: "Lorem ipsum dolor sit amet",
-            summary_text:
-                "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.",
-            status: "completed",
-        },
-    ];
+
     return (
         <main className="min-h-screen">
             <div className="container mx-auto flex flex-col gap-4">
